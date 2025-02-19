@@ -1,24 +1,28 @@
-# Use a slim version of Python 3.10 as the base image
-FROM python:3.10-slim
+# Stage 1: Build stage (Install dependencies)
+FROM python:3.10-slim as builder
 
-# Set the working directory inside the container
 WORKDIR /app
 
-# Copy the requirements file first to leverage Docker's caching
+# Install system dependencies
+RUN apt-get update && apt-get install -y gcc libpq-dev && rm -rf /var/lib/apt/lists/*
+
+# Copy and install dependencies
 COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Upgrade pip and install dependencies
-RUN pip install --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+# Stage 2: Final stage (Run application)
+FROM python:3.10-slim
 
-# Copy the rest of the application code
+WORKDIR /app
+
+# Copy dependencies from builder stage
+COPY --from=builder /usr/local/lib/python3.10 /usr/local/lib/python3.10
+
+# Copy the entire application
 COPY . .
 
-# Expose the default Django port
+# Expose Django port
 EXPOSE 8000
 
-# Set environment variables to avoid interactive prompts
-ENV PYTHONUNBUFFERED=1
-
-# Define the command to run the Django app
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "your_project_name.wsgi:application"]
+# Run migrations and start server
+CMD ["sh", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
