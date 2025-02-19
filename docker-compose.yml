@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  backend:
+    build: .
+    container_name: django_backend
+    volumes:
+      - .:/app
+      - /db.sqlite3  # Ensure it's inside the container without mapping a host file
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+
+
