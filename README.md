@@ -2,8 +2,15 @@ for run the server
 
 
 
-py manage.py runserver
+1. py manage.py runserver
 
 
-python.exe -m pip install --upgrade pip #If server is not working use this
-pip install django-filter
+2. pip install -r requirements.txt
+ 
+
+*For run in Docker and docker-compose install Docker and docker compose in your local
+
+use this commands after installation
+
+3. docker-compose up --build -d   #first time 
+4. docker-compose up #   #after first time
