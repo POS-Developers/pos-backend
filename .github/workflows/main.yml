@@ -33,11 +33,12 @@ jobs:
       - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.EC2_HOST }}
+          host: ${{ secrets.BACKEND_EC2_HOST }}  # Backend EC2 instance IP
           username: ubuntu
           key: ${{ secrets.AWS_PRIVATE_KEY }}
           script: |
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/pos-backend:latest
             docker stop pos-backend || true
             docker rm pos-backend || true
-            docker run -d -p 8000:8000 --name pos-backend ${{ secrets.DOCKERHUB_USERNAME }}/pos-backend:latest
+            docker run -d -p 8000:8000 --name pos-backend \
+              ${{ secrets.DOCKERHUB_USERNAME }}/pos-backend:latest
