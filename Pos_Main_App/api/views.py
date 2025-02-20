@@ -4,6 +4,11 @@ from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import generics, viewsets
 from Pos_Main_App.api.serializers   import Dishes_Serializer, Employe_Serializer, Bill_Serializer, OrderedDish_Serializer, Table_Serializer
 from Pos_Main_App.api.filters import Dishes_filter, OrderedDish_filter,Bill_filter, Employe_filter, Table_filter
+from django.http import JsonResponse
+
+
+def health_check(request):
+    return JsonResponse({"status": "OK"})
 
 
 
