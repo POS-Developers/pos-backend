@@ -19,7 +19,7 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/Pos-backend:latest ./pos-backend
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/Pos-backend:latest ./Pos-backend
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/Pos-backend:latest
 
       - name: Deploy to EC2
