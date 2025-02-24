@@ -2,10 +2,10 @@ name: Deploy Backend
 
 on:
   push:
-    paths:
-      - 'pos-backend/**'   # Runs only when files inside "pos-backend" are changed
     branches:
       - new_staging_test
+    paths:
+      - "pos-backend/**"  # Runs only when files in pos-backend change
 
 jobs:
   build-and-deploy:
@@ -19,8 +19,7 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-          cd pos-backend
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/pos-backend:latest .
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/pos-backend:latest ./pos-backend
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/pos-backend:latest
 
       - name: Deploy to EC2
@@ -30,8 +29,10 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.AWS_PRIVATE_KEY }}
           script: |
-            cd /home/ubuntu/pos-app
+            cd /home/ubuntu/pos-app  # Navigate to the correct directory
             docker-compose down  # Stop running containers
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/pos-backend:latest
-            docker-compose up -d  # Restart services
-            docker system prune -f  # Clean up unused images
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/pos-backend:latest  # Pull the latest image
+            docker-compose up -d --force-recreate  # Start fresh containers
+            docker system prune -f  # Cleanup unused images
+            docker ps -a  # Check running containers
+            docker logs $(docker ps -aq --filter "name=pos-backend")  # Debug logs
