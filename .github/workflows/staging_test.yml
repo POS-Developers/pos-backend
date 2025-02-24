@@ -3,7 +3,7 @@ name: Deploy Backend
 on:
   push:
     branches:
-      - main
+      - staging_test
     paths:
       - 'pos-backend/**'  # Trigger only when backend files change
 
