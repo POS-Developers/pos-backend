@@ -1,43 +1,48 @@
-name: Deploy Backend
+name: Backend Deployment
 
 on:
   push:
-    paths:
-      - 'Pos-backend/**'  # ✅ Use correct case (P is capital)
     branches:
-      - staging_test
+      - staging_test  # Change if your default branch is different
+    paths:
+      - "Pos-backend/**"  # ✅ Runs only if changes are made inside Pos-backend
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0  # ✅ Ensures full repo is checked out
 
-      - name: Debug Directory Structure
-        run: ls -R  # ✅ Verify "Pos-backend" exists
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Debug - List Files
+        run: ls -l  # ✅ Check available files and directories
+
+      - name: Set Up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Log in to Docker Hub
-        run: echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Build and Push Docker Image
         run: |
-          cd Pos-backend  # ✅ Correct case
+          cd Pos-backend  # ✅ Ensure you're inside the correct directory
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/pos-backend:latest .
-          docker images  # ✅ Debugging: Show built images
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/pos-backend:latest || (echo "Push failed" && exit 1)
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/pos-backend:latest
 
-      - name: Deploy to EC2
+      - name: Deploy to EC2 via SSH
         uses: appleboy/ssh-action@master
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
+          host: ${{ secrets.EC2_HOST }}  # Backend EC2 instance IP
+          username: ubuntu
           key: ${{ secrets.AWS_PRIVATE_KEY }}
           script: |
-            cd /home/ubuntu/pos-app
-            docker-compose down  # Stop running containers
+            cd /home/ubuntu/pos-app  # ✅ Change to the directory containing docker-compose
+            docker-compose down  # ✅ Stop existing containers
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/pos-backend:latest
-            docker-compose up -d  # Restart services
-            docker system prune -f  # Cleanup unused images
+            docker-compose up -d --force-recreate  # ✅ Restart services
+            docker system prune -f  # ✅ Clean up unused images
+            docker ps -a  # ✅ Debug running containers
