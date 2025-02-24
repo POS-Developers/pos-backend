@@ -2,8 +2,10 @@ name: Deploy Backend
 
 on:
   push:
+    paths:
+      - 'Pos-backend/**'
     branches:
-      - main
+      - new_staging_test_3
 
 jobs:
   build-and-deploy:
