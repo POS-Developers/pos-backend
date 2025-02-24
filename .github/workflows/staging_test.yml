@@ -2,10 +2,10 @@ name: Deploy Backend
 
 on:
   push:
-    branches:
-      - new_staging_test
     paths:
-      - "Pos-backend/**"  # Runs only when files in pos-backend change
+      - 'Pos-backend/**'  # ✅ Use correct case (P is capital)
+    branches:
+      - staging_test
 
 jobs:
   build-and-deploy:
@@ -13,14 +13,21 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # ✅ Ensures full repo is checked out
+
+      - name: Debug Directory Structure
+        run: ls -R  # ✅ Verify "Pos-backend" exists
 
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKERHUB_PASSWORD }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
       - name: Build and Push Docker Image
         run: |
-          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/Pos-backend:latest ./Pos-backend
-          docker push ${{ secrets.DOCKERHUB_USERNAME }}/Pos-backend:latest
+          cd Pos-backend  # ✅ Correct case
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/pos-backend:latest .
+          docker images  # ✅ Debugging: Show built images
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/pos-backend:latest || (echo "Push failed" && exit 1)
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
@@ -29,10 +36,8 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.AWS_PRIVATE_KEY }}
           script: |
-            cd /home/ubuntu/pos-app  # Navigate to the correct directory
+            cd /home/ubuntu/pos-app
             docker-compose down  # Stop running containers
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/Pos-backend:latest  # Pull the latest image
-            docker-compose up -d --force-recreate  # Start fresh containers
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/pos-backend:latest
+            docker-compose up -d  # Restart services
             docker system prune -f  # Cleanup unused images
-            docker ps -a  # Check running containers
-            docker logs $(docker ps -aq --filter "name=Pos-backend")  # Debug logs
