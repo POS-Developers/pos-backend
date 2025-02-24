@@ -5,7 +5,7 @@ on:
     branches:
       - staging_test
     paths:
-      - 'pos-backend/**'  # Trigger only when backend files change
+      - 'pos-backend/**'  # Trigger only when backend files changes
 
 jobs:
   build-and-deploy:
