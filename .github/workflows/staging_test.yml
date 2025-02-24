@@ -5,7 +5,7 @@ on:
     paths:
       - 'Pos-backend/**'  # ✅ Use correct case (P is capital)
     branches:
-      - new_staging_test
+      - staging_test
 
 jobs:
   build-and-deploy:
