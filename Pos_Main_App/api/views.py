@@ -7,8 +7,21 @@ from rest_framework import generics, viewsets
 from Pos_Main_App.api.serializers   import Dishes_Serializer, Employe_Serializer, Bill_Serializer,  Table_Serializer
 from Pos_Main_App.api.filters import Dishes_filter, Bill_filter, Employe_filter, Table_filter
 
+
 from django.views.decorators.csrf import csrf_exempt
 
+def health_check(request):
+    return JsonResponse({"status": "OK"})
+
+def api_data(request):
+    if request.method == 'GET':
+        data = {
+            "message": "Hello from the backend!",
+            "status": "success"
+        }
+        return JsonResponse(data)
+    else:
+        return JsonResponse({"error": "Method not allowed"}, status=405)
 
 
 class Dishes_View(generics.ListCreateAPIView):
