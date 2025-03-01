@@ -53,7 +53,7 @@
 
 
 import django_filters
-from Pos_Main_App.models import Dishes_model, Bill_model, Employe_model, Table_model, OrderedDish_model
+from Pos_Main_App.models import Dishes_model, Bill_model, Employe_model, Table_model
 
 class Dishes_filter(django_filters.FilterSet):
      Dish_Type = django_filters.ChoiceFilter(field_name="Dish_Type", choices=Dishes_model.Dishes_Type)  # Exact match for type
@@ -95,11 +95,5 @@ class Table_filter(django_filters.FilterSet):
         fields = ["Table_Number"]  # Ensure "Table_Number" exists in your Table_model
 
 
-class OrderedDish_filter(django_filters.FilterSet):
-    class Meta:
-        model = OrderedDish_model
-        fields = {
-            'bill__bill_number': ['exact'],  # Use string reference for the relationship
-        }
 
 
