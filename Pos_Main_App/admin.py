@@ -1,5 +1,5 @@
 from django.contrib import admin
-from Pos_Main_App.models import Dishes_model, Employe_model, Bill_model, Table_model, OrderedDish_model
+from Pos_Main_App.models import Dishes_model, Employe_model, Bill_model, Table_model
 
 # Register your models here.
 
@@ -19,15 +19,35 @@ admin.site.register(Employe_model, Employe_admin)
 
 
 
-class Bill_admin(admin.ModelAdmin):
-    list_display = ['id','bill_number', 'created_at', 'employee', 'total_amount', 'table', 'get_dishes']
+# class Bill_admin(admin.ModelAdmin):
+#     list_display = ['id','bill_number', 'created_at', 'employee', 'total_amount', 'table', 'get_dishes']
+
+#     def get_dishes(self, obj):
+#         return ", ".join([dish.Dish_Name for dish in obj.dishes.all()])
+    
+#     get_dishes.short_description = "Ordered Dishes"
+
+# admin.site.register(Bill_model, Bill_admin)
+
+from django.contrib import admin
+from .models import Bill_model
+
+class BillAdmin(admin.ModelAdmin):
+    list_display = ['id', 'bill_number', 'created_at', 'employee', 'total_amount', 'table', 'get_dishes']
 
     def get_dishes(self, obj):
-        return ", ".join([dish.Dish_Name for dish in obj.dishes.all()])
-    
+        """
+        Retrieves ordered dishes from the JSON field `ordered_dishes`.
+        Assumes `ordered_dishes` is stored as a list of dictionaries.
+        """
+        if isinstance(obj.ordered_dishes, list):
+            return ", ".join([f"{dish['name']} (x{dish['quantity']})" for dish in obj.ordered_dishes])
+        return "No dishes"
+
     get_dishes.short_description = "Ordered Dishes"
 
-admin.site.register(Bill_model, Bill_admin)
+admin.site.register(Bill_model, BillAdmin)
+
 
 
 
@@ -38,7 +58,3 @@ admin.site.register(Table_model, Table_admin)
 
 
 
-
-class OrderedDish_admin(admin.ModelAdmin):
-    list_display= ['bill','dish','quantity']
-admin.site.register(OrderedDish_model,OrderedDish_admin) 
