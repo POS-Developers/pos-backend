@@ -28,8 +28,13 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*',"http://3.108.54.86",'localhost', ]
 
-
+TEAMS_WEBHOOK_URL = "https://65b2vp.webhook.office.com/webhookb2/4e36ee49-89c7-49d8-8aaf-4ba9df504bb9@b04f334b-09f1-439d-b551-60c4b5f96df0/IncomingWebhook/3aaf881d21a34444a5d68fb8047bb988/ae126751-8f09-49fa-be5a-04d85ec35001/V2CmAK7DVxoR8g13TDxK05igsSd55k7AhEsphhgBsWMN41"
 # Application definition
+
+# settings.py
+import os
+
+SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL", "https://hooks.slack.com/services/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")
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -41,7 +46,8 @@ INSTALLED_APPS = [
     'rest_framework',
     'Pos_Main_App',
     'django_filters',
-    'corsheaders'
+    'corsheaders',
+    'django_extensions',
 ]
 
 MIDDLEWARE = [
@@ -52,7 +58,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware'
+    'corsheaders.middleware.CorsMiddleware',
+    'Pos_Main_App.middleware.SlackErrorMiddleware'
+,
 ]
 CORS_ALLOW_ALL_ORIGINS = True 
 

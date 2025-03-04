@@ -1,5 +1,5 @@
 from django.contrib import admin
-from Pos_Main_App.models import Dishes_model, Employe_model, Bill_model, Table_model, OrderedDish_model
+from Pos_Main_App.models import Dishes_model, Employe_model, Bill_model, Table_model, OrderedDish_model,ContactSupport
 
 # Register your models here.
 
@@ -42,3 +42,11 @@ admin.site.register(Table_model, Table_admin)
 class OrderedDish_admin(admin.ModelAdmin):
     list_display= ['bill','dish','quantity']
 admin.site.register(OrderedDish_model,OrderedDish_admin) 
+
+
+class ContactSupportAdmin(admin.ModelAdmin):
+    list_display = ['full_name', 'email', 'user_message', 'created_at']  # Use correct field names
+    search_fields = ['full_name', 'email']
+    list_filter = ['created_at']
+
+admin.site.register(ContactSupport, ContactSupportAdmin)

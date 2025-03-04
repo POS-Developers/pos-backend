@@ -125,3 +125,14 @@ class Bill_model(models.Model):
 
 
 
+
+from django.db import models
+
+class ContactSupport(models.Model):
+    full_name = models.CharField(max_length=255)  # Check the actual field name
+    email = models.EmailField()
+    user_message = models.TextField()  # Check if this is the correct field
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.full_name  # Ensure a meaningful string representation
