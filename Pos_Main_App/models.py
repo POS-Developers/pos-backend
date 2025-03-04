@@ -1,6 +1,10 @@
 from django.db import models
 from django.utils import timezone
 from datetime import datetime, time
+import requests
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.conf import settings
 
 # Create your models here.
 
@@ -8,6 +12,7 @@ from datetime import datetime, time
 
 
 #this model is for storing the making process of dish
+
 
 
 class Dishes_model(models.Model):
@@ -136,3 +141,21 @@ class ContactSupport(models.Model):
 
     def __str__(self):
         return self.full_name  # Ensure a meaningful string representation
+
+# Signal to send Slack message
+@receiver(post_save, sender=ContactSupport)
+def send_slack_notification(sender, instance, created, **kwargs):
+    if created and hasattr(settings, "SLACK_WEBHOOK_URL"):
+        message = (
+            f"🎉 *New Contact Request!*\n"
+            f"👤 *Name:* {instance.full_name}\n"
+            f"📧 *Email:* {instance.email}\n"
+            f"📝 *Message:* {instance.user_message}"
+        )
+        payload = {"text": message}
+        
+        try:
+            response = requests.post(settings.SLACK_WEBHOOK_URL, json=payload)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            print(f"Failed to send Slack notification: {e}")
