@@ -45,3 +45,37 @@ class ContactSupportView(APIView):
         send_slack_error_message(error_message)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+def send_slack_notification(error_message, request):
+    """
+    Sends error notifications to Slack when an API request fails.
+    """
+    SLACK_WEBHOOK_URL = getattr(settings, "SLACK_WEBHOOK_URL", None)
+
+    if not SLACK_WEBHOOK_URL:
+        print("⚠️ Slack Webhook URL is not configured in settings.")
+        return
+
+    api_path = request.path
+    request_method = request.method
+    client_ip = request.META.get("REMOTE_ADDR", "Unknown")
+
+    slack_message = (
+        f"🚨 *API Error Alert!*\n"
+        f"🔗 *URL:* {api_path}\n"
+        f"📡 *Method:* {request_method}\n"
+        f"💻 *Client IP:* {client_ip}\n"
+        f"📜 *Error:* ```{error_message}```"
+    )
+
+    payload = {"text": slack_message}
+
+    try:
+        response = requests.post(SLACK_WEBHOOK_URL, json=payload)
+        response.raise_for_status()
+        print("✅ Slack Error Notification Sent!")
+    except requests.exceptions.RequestException as e:
+        print(f"❌ Failed to send Slack error notification: {e}")

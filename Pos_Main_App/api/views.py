@@ -15,7 +15,8 @@ import json
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.response import Response
-
+import traceback
+from .utils import send_slack_notification 
 
 def health_check(request):
     return JsonResponse({"status": "OK"})
@@ -175,6 +176,9 @@ def test_slack_error(request):
         send_slack_error_message(error_message)  # Send to Slack
         return JsonResponse({"error": "An error occurred. Check Slack."}, status=500)
 
+
+
+
 @method_decorator(csrf_exempt, name='dispatch')
 class ContactSupportView(APIView):
     def get(self, request, *args, **kwargs):
@@ -185,11 +189,20 @@ class ContactSupportView(APIView):
 
     def post(self, request, *args, **kwargs):
         """Submit a contact support request."""
-        serializer = ContactSupportSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
+        try:
+            serializer = ContactSupportSerializer(data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(
+                    {"message": "Contact request submitted successfully!"},
+                    status=status.HTTP_201_CREATED
+                )
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            error_message = traceback.format_exc()  # Capture full error traceback
+            send_slack_notification(error_message, request)  # Send error to Slack
             return Response(
-                {"message": "Contact request submitted successfully!"},
-                status=status.HTTP_201_CREATED
+                {"error": "An internal server error occurred"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

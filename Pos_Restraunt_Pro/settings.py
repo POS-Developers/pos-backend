@@ -34,7 +34,7 @@ TEAMS_WEBHOOK_URL = "https://65b2vp.webhook.office.com/webhookb2/4e36ee49-89c7-4
 # settings.py
 import os
 
-SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL", "https://hooks.slack.com/services/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")
+SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL", "https://hooks.slack.com/services/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")
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
