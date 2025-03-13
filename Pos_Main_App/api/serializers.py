@@ -1,37 +1,41 @@
 from rest_framework import serializers
-from Pos_Main_App.models import (
-    Dishes_model, Employe_model, Bill_model,
-    OrderedDish_model, Table_model,ContactSupport
-)
+from Pos_Main_App.models import Dishes_model, Employe_model, Bill_model, OrderedDish_model, Table_model, ContactSupport
+from django.utils import timezone
 
-class Dishes_Serializer(serializers.ModelSerializer):
-    class Meta:
-        model = Dishes_model
-        fields = '__all__'
 
 class Employe_Serializer(serializers.ModelSerializer):
     class Meta:
         model = Employe_model
         fields = '__all__'
 
+
+class Dishes_Serializer(serializers.ModelSerializer):
+    class Meta:
+        model = Dishes_model
+        fields = '__all__'
+
+
 class Table_Serializer(serializers.ModelSerializer):
     class Meta:
         model = Table_model
         fields = '__all__'
+
 
 class OrderedDish_Serializer(serializers.ModelSerializer):
     class Meta:
         model = OrderedDish_model
         fields = ['dish', 'quantity']
 
+
 class Bill_Serializer(serializers.ModelSerializer):
     dishes = OrderedDish_Serializer(many=True, write_only=True)
     employee = serializers.PrimaryKeyRelatedField(queryset=Employe_model.objects.all())
     table = serializers.PrimaryKeyRelatedField(queryset=Table_model.objects.all(), required=False, allow_null=True)
-    
+
     class Meta:
         model = Bill_model
-        fields = ['bill_number', 'created_at', 'employee', 'table', 'total_amount', 'dishes']
+        fields = ['id', 'bill_number', 'created_at', 'employee', 'table', 'total_amount', 'dishes']
+        read_only_fields = ['bill_number', 'created_at', 'total_amount']
 
     def create(self, validated_data):
         dishes_data = validated_data.pop('dishes')
