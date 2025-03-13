@@ -1,8 +1,10 @@
-
-
-
 from django.db import models
 from django.utils import timezone
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.conf import settings
+import requests
+from django.db import transaction
 
 class Dishes_model(models.Model):
     Dishes_Food_Type = [('Chicken', 'Chicken'), ('Mutton', 'Mutton'), ('Veg', 'Veg')]
@@ -28,7 +30,7 @@ class Table_model(models.Model):
 
 class Employe_model(models.Model):
     Employes_Position = [('waiter', 'waiter'), ('cook', 'cook'), ('Other', 'Other')]
-    
+
     Employe_Name = models.CharField(max_length=100)
     Employe_Number = models.CharField(max_length=10, unique=True)
     Employe_Address = models.CharField(max_length=1000)
@@ -37,50 +39,13 @@ class Employe_model(models.Model):
     def __str__(self):
         return self.Employe_Name
 
-
-# class OrderedDish_model(models.Model):
-#     bill = models.ForeignKey('Bill_model', on_delete=models.CASCADE, related_name='ordered_dishes')
-#     dish = models.ForeignKey('Dishes_model', on_delete=models.CASCADE)
-#     quantity = models.PositiveIntegerField(default=1)
-
-#     def __str__(self):
-#         return f"{self.dish.Dish_Name} x {self.quantity} (Bill {self.bill.bill_number})"
-
-# class Bill_model(models.Model):
-#     bill_number = models.PositiveIntegerField(editable=False)
-#     created_at = models.DateTimeField(auto_now_add=True)
-#     employee = models.ForeignKey('Employe_model', on_delete=models.SET_NULL, null=True, blank=False, related_name='bills_served')
-#     table = models.ForeignKey('Table_model', on_delete=models.SET_NULL, null=True, blank=True, related_name='bills')
-#     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
-#     dishes = models.ManyToManyField('Dishes_model', through='OrderedDish_model', related_name='bills')
-
-#     def __str__(self):
-#         return f"Bill {self.bill_number} - {self.created_at}"
-
-#     def save(self, *args, **kwargs):
-#         if not self.pk:
-#             today = timezone.now().date()  # Get today's date
-#             last_bill = Bill_model.objects.filter(created_at__date=today).order_by('-bill_number').first()
-
-#             # Set the bill number
-#             if last_bill:
-#                 self.bill_number = last_bill.bill_number + 1
-#             else:
-#                 self.bill_number = 1  # Start from 1 if no bills exist for the day
-
-#         super().save(*args, **kwargs)
-
-
-from django.db import models, transaction
-from django.utils import timezone
-
 class Bill_model(models.Model):
     bill_number = models.PositiveIntegerField(editable=False, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)
     employee = models.ForeignKey('Employe_model', on_delete=models.SET_NULL, null=True, blank=False, related_name='bills_served')
     table = models.ForeignKey('Table_model', on_delete=models.SET_NULL, null=True, blank=True, related_name='bills')
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    ordered_dishes = models.JSONField(default=list)  
+    ordered_dishes = models.JSONField(default=list)
 
     def __str__(self):
         return f"Bill {self.bill_number} - {self.created_at}"
@@ -95,11 +60,36 @@ class Bill_model(models.Model):
                     .order_by('-bill_number')
                     .first()
                 )
-
-                # Generate the next bill number
                 self.bill_number = last_bill.bill_number + 1 if last_bill else 1
 
         # Calculate total amount based on ordered_dishes
         self.total_amount = sum(dish["price"] * dish["quantity"] for dish in self.ordered_dishes)
 
         super().save(*args, **kwargs)
+
+class ContactSupport(models.Model):
+    full_name = models.CharField(max_length=255)
+    email = models.EmailField()
+    user_message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.full_name
+
+# Signal to send Slack message
+@receiver(post_save, sender=ContactSupport)
+def send_slack_notification(sender, instance, created, **kwargs):
+    if created and hasattr(settings, "SLACK_WEBHOOK_URL"):
+        message = (
+            f"🎉 *New Contact Request!*\n"
+            f"👤 *Name:* {instance.full_name}\n"
+            f"📧 *Email:* {instance.email}\n"
+            f"📝 *Message:* {instance.user_message}"
+        )
+        payload = {"text": message}
+
+        try:
+            response = requests.post(settings.SLACK_WEBHOOK_URL, json=payload)
+            response.raise_for_status()
+        except requests.exceptions.RequestException as e:
+            print(f"Failed to send Slack notification: {e}")
